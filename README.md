@@ -11,3 +11,4 @@
 
    Visualize o projeto atraves do Link de acesso para o WOKWI: https://wokwi.com/projects/445533674608602113
    
+   <img src = "assets\imagem.png">
