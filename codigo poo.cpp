@@ -1,91 +1,45 @@
+#include <Arduino.h>
+
 class Led {
   int pin;
 public:
   Led(int p) : pin(p) {}
-
-  void begin() {
-    pinMode(pin, OUTPUT);
-    off();
-  }
+  void begin() { pinMode(pin, OUTPUT); off(); }
   void on()  { digitalWrite(pin, HIGH); }
-  void off() { digitalWrite(pin, LOW);  }
-  void blink(unsigned long tempo = 200) {
-    on();
-    delay(tempo);
-    off();
-    delay(tempo);
-  }
+  void off() { digitalWrite(pin, LOW); }
 };
+
 class Semaforo {
   Led &vermelho;
   Led &amarelo;
   Led &verde;
-  bool aberto = false; 
 public:
-  Semaforo(Led &v, Led &a, Led &g)
-    : vermelho(v), amarelo(a), verde(g) {}
-
-  void begin() {
-    vermelho.begin();
-    amarelo.begin();
-    verde.begin();
-    mostrarEstado();
-  }
-  void executar() {
-  }
-
-  void abrir() {
-    if (!aberto) {
-      amarelo.blink(100);
-      aberto = true;
-      mostrarEstado();
-      Serial.println("Semáforo ABERTO (verde).");
-    }
-  }
-
-  void fechar() {
-    if (aberto) {
-      amarelo.blink(100);
-      aberto = false;
-      mostrarEstado();
-      Serial.println("Semáforo FECHADO (vermelho).");
-    }
-  }
-private:
-  void mostrarEstado() {
-    vermelho.off();
-    amarelo.off();
-    verde.off();
-
-    if (aberto) verde.on();
-    else        vermelho.on();
-  }
+  Semaforo(Led &v, Led &a, Led &g) : vermelho(v), amarelo(a), verde(g) {}
+  void begin() { vermelho.begin(); amarelo.begin(); verde.begin(); apagarTudo(); }
+  void apagarTudo() { vermelho.off(); amarelo.off(); verde.off(); }
+  void ligarVerde()   { apagarTudo(); verde.on(); }
+  void ligarAmarelo() { apagarTudo(); amarelo.on(); }
+  void ligarVermelho(){ apagarTudo(); vermelho.on(); }
 };
 
 Led ledVerm(8);
 Led ledAmar(7);
 Led ledVerd(6);
 Semaforo sem(ledVerm, ledAmar, ledVerd);
+
 void setup() {
   Serial.begin(9600);
-  Serial.println("Digite F para fechar e A para abrir.");
-
+  Serial.println("Digite V (verde), A (amarela) ou R (vermelha).");
   sem.begin();
 }
+
 void loop() {
-  sem.executar();
   if (Serial.available()) {
-    String comando = Serial.readStringUntil('\n'); 
-    comando.trim(); 
-
-    Serial.print("Comando recebido: ");
-    Serial.println(comando);
-
-    if (comando == "F" || comando == "f") {
-      sem.fechar();
-    }
-    else if (comando == "A" || comando == "a") {
-      sem.abrir();
-    }
+    String comando = Serial.readStringUntil('\n');
+    comando.trim();
+    if (comando.equalsIgnoreCase("V")) sem.ligarVerde();
+    else if (comando.equalsIgnoreCase("A")) sem.ligarAmarelo();
+    else if (comando.equalsIgnoreCase("R")) sem.ligarVermelho();
+    else Serial.println("Comando inválido. Use V, A ou R.");
   }
 }
